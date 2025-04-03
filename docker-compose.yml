@@ -6,16 +6,16 @@ services:
     container_name: todo-app-db
     environment:
       MYSQL_ROOT_PASSWORD: 00000000
-      MYSQL_USER: admin
-      MYSQL_PASSWORD:
+      MYSQL_USER: root
+      MYSQL_PASSWORD: 00000000
       MYSQL_DATABASE: todo_app_db
     ports:
-      - '5432:5432'
+      - '3312:3306'
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
       - mynetwork
-    restart: on-failure
+    restart: no
 volumes:
   mysql_data:
 
