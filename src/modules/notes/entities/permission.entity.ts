@@ -1,4 +1,5 @@
 import { User } from '@/modules/auth/entities/user.entity';
+import { PermissionEnum } from '@/modules/notes/enums/notes.enum';
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Note } from './note.entity';
 
@@ -15,6 +16,6 @@ export class Permission {
   @JoinColumn({ name: 'note_id' })
   note: Note;
 
-  @Column()
-  permission: 'VIEW' | 'EDIT' | 'COMMENT';
+  @Column({ type: 'enum', enum: PermissionEnum })
+  permission: PermissionEnum;
 }

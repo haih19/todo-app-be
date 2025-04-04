@@ -1,4 +1,5 @@
 import { User } from '@/modules/auth/entities/user.entity';
+import { VisibilityEnum } from '@/modules/notes/enums/notes.enum';
 import {
   Column,
   CreateDateColumn,
@@ -23,8 +24,8 @@ export class Note {
   @Column('text')
   content: string;
 
-  @Column({ enum: ['PUBLIC', 'PRIVATE'], default: 'PRIVATE' })
-  visibility: 'PUBLIC' | 'PRIVATE';
+  @Column({ type: 'enum', enum: VisibilityEnum, default: VisibilityEnum.Private })
+  visibility: VisibilityEnum;
 
   @ManyToOne(() => User, (user) => user.notes)
   @JoinColumn({ name: 'owner_id' })
