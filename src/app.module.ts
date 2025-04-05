@@ -6,9 +6,17 @@ import { AppLoggerModule } from './modules/app-logger/app-logger.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { NotesModule } from './modules/notes/notes.module';
 import { RolesModule } from './modules/roles/roles.module';
+import { DatabaseModule } from './modules/database/database.module';
 
 @Module({
-  imports: [ConfigModule.forRoot(), AppLoggerModule, AuthModule, NotesModule, RolesModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    AppLoggerModule,
+    AuthModule,
+    NotesModule,
+    RolesModule,
+    DatabaseModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
