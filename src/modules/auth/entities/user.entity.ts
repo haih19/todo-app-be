@@ -1,3 +1,4 @@
+import { UserStatusEnum } from '@/modules/auth/enums/auth.enums';
 import { Note } from '@/modules/notes/entities/note.entity';
 import { Permission } from '@/modules/notes/entities/permission.entity';
 import { UserRole } from '@/modules/roles/entities/user-role.entity';
@@ -24,6 +25,12 @@ export class User {
 
   @Column()
   password: string;
+
+  @Column({ nullable: true })
+  avatarUrl?: string;
+
+  @Column({ type: 'enum', enum: UserStatusEnum, default: UserStatusEnum.Active })
+  status: UserStatusEnum;
 
   @OneToMany(() => OAuthAccount, (oauthAccount) => oauthAccount.user)
   oauthAccounts: OAuthAccount[];

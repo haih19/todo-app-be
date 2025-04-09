@@ -1,4 +1,6 @@
 import { RegexConstant } from '@/common/constants/regex';
+import { IsValidPassword } from '@/common/decorators/is-valid-password.decorator';
+import { MatchField } from '@/common/decorators/match-field.decorator';
 import { errorMessageBuilder } from '@/common/errors/error-message-builder';
 import { ApiProperty } from '@nestjs/swagger';
 import {
@@ -12,7 +14,7 @@ import {
 } from 'class-validator';
 
 export class CreateUserDto {
-  @ApiProperty({ example: 'john19' })
+  @ApiProperty({ example: 'john19', required: false })
   @IsNotEmpty()
   @IsString()
   @MinLength(6, {
@@ -20,7 +22,7 @@ export class CreateUserDto {
   })
   @MaxLength(18, { message: errorMessageBuilder('Username', 'tooLong', { maxLength: 18 }) })
   @Matches(RegexConstant.USERNAME, { message: errorMessageBuilder('Username', 'invalid') })
-  username: string;
+  username?: string;
 
   @ApiProperty({ example: 'john19@gmail.com' })
   @IsNotEmpty()
@@ -38,15 +40,16 @@ export class CreateUserDto {
   @IsOptional()
   lastName?: string;
 
-  @ApiProperty({ example: '*********' })
-  @IsNotEmpty()
-  @MinLength(8, { message: errorMessageBuilder('Password', 'tooShort', { minLength: 8 }) })
-  @MaxLength(20, { message: errorMessageBuilder('Password', 'tooLong', { maxLength: 20 }) })
-  @Matches(RegexConstant.PASSWORD, {
-    message: errorMessageBuilder('Password', 'invalid', {
-      customMessage:
-        'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
+  @ApiProperty({ example: '********' })
+  @IsValidPassword('Password')
+  password: string;
+
+  @ApiProperty({ example: '********' })
+  @IsValidPassword('Confirm Password')
+  @MatchField('password', {
+    message: errorMessageBuilder('Confirm Password', 'invalid', {
+      customMessage: 'Password does not match.',
     }),
   })
-  password: string;
+  confirmPassword: string;
 }
