@@ -23,9 +23,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Register new user' })
   @ApiResponse({ status: 201, description: 'User created' })
   async register(@Body(ValidationPipe) createUserDto: CreateUserDto) {
-    return {
-      name: 'demo',
-    };
+    return await this.authService.register(createUserDto);
   }
 
   @Post('login')
