@@ -1,7 +1,13 @@
 import { AppLoggerService } from '@/modules/app-logger/app-logger.service';
-import { BadGatewayException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadGatewayException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import bcrypt from 'bcrypt';
+import * as bcrypt from 'bcrypt';
 import { plainToInstance } from 'class-transformer';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -19,26 +25,26 @@ export class AuthService {
 
   private async generateRandomUsername(): Promise<string> {
     try {
-      let username: string | null = null;
-      let isTaken = true;
-      let retry = 0;
-      const MAX_RETRY = 10;
+      const usernames = Array.from(
+        { length: 5 },
+        () => 'user_' + Math.random().toString(36).substring(2, 10)
+      );
 
-      while (isTaken && retry < MAX_RETRY) {
-        username = 'user_' + Math.random().toString(36).substring(2, 10);
-        const existingUser = await this.userRepository.findOne({ where: { username } });
+      const existingUsers = await this.userRepository.find({
+        where: usernames.map((username) => ({ username })),
+        select: ['username'],
+      });
 
-        isTaken = !!existingUser;
-        retry++;
+      const taken = new Set(existingUsers.map((u) => u.username));
+      const available = usernames.find((u) => !taken.has(u));
+
+      if (!available) {
+        throw new InternalServerErrorException('Failed to generate a unique username.');
       }
 
-      if ((retry === MAX_RETRY && isTaken) || !username) {
-        throw new Error('Exceeded maximum attempts to generate unique username.');
-      }
-
-      return username;
+      return available;
     } catch (error) {
-      throw new Error('Failed to generate a unique username.');
+      throw new InternalServerErrorException('Error while generating username: ' + error.message);
     }
   }
 
@@ -49,15 +55,17 @@ export class AuthService {
       });
 
       if (!user) {
-        throw new UnauthorizedException('User not found.');
+        throw new NotFoundException('User not found.');
       }
 
       if (user.status !== UserStatusEnum.Active) {
-        throw new UnauthorizedException('User is inactive.');
+        throw new UnauthorizedException('Your account has been disabled. Please contact support.');
       }
 
       return user;
-    } catch (error) {}
+    } catch (error) {
+      throw error;
+    }
   }
 
   async register(createUser: CreateUserDto): Promise<UserResponseDto> {
@@ -71,8 +79,10 @@ export class AuthService {
         throw new BadGatewayException('Email or Username already in use.');
       }
 
-      const hashedPassword = await bcrypt.hash(password, 10);
-      const generatedUsername = await this.generateRandomUsername();
+      const [hashedPassword, generatedUsername] = await Promise.all([
+        bcrypt.hash(password, 10),
+        this.generateRandomUsername(),
+      ]);
 
       const newUser = this.userRepository.create({
         email,
@@ -87,7 +97,7 @@ export class AuthService {
 
       return plainToInstance(UserResponseDto, savedUser);
     } catch (error) {
-      throw new Error('Failed to register user');
+      throw error;
     }
   }
 }
