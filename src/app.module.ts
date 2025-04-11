@@ -16,6 +16,7 @@ import { DatabaseModule } from './modules/database/database.module';
     NotesModule,
     RolesModule,
     DatabaseModule,
+    AppLoggerModule,
   ],
   controllers: [AppController],
   providers: [AppService],
