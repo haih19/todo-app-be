@@ -3,8 +3,8 @@ import { Note } from '@/modules/notes/entities/note.entity';
 import { Permission } from '@/modules/notes/entities/permission.entity';
 import { UserRole } from '@/modules/roles/entities/user-role.entity';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { OAuthAccount } from './oauth-account.entity';
-import { RefreshToken } from './refresh-token.entity';
+import { UserOAuthAccount } from './oauth-account.entity';
+import { UserRefreshToken } from './refresh-token.entity';
 
 @Entity()
 export class User {
@@ -32,11 +32,11 @@ export class User {
   @Column({ type: 'enum', enum: UserStatusEnum, default: UserStatusEnum.Active })
   status: UserStatusEnum;
 
-  @OneToMany(() => OAuthAccount, (oauthAccount) => oauthAccount.user)
-  oauthAccounts: OAuthAccount[];
+  @OneToMany(() => UserOAuthAccount, (oauthAccount) => oauthAccount.user)
+  oauthAccounts: UserOAuthAccount[];
 
-  @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user)
-  refreshTokens: RefreshToken[];
+  @OneToMany(() => UserRefreshToken, (refreshToken) => refreshToken.user)
+  refreshTokens: UserRefreshToken[];
 
   @OneToMany(() => UserRole, (userRole) => userRole.user)
   userRoles: UserRole[];

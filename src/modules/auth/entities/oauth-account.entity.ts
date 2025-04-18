@@ -1,7 +1,9 @@
+import { OAuthProviderEnum } from '@/modules/auth/enums/auth.enums';
 import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -10,7 +12,7 @@ import {
 import { User } from './user.entity';
 
 @Entity()
-export class OAuthAccount {
+export class UserOAuthAccount {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -18,10 +20,11 @@ export class OAuthAccount {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Column()
-  provider: string;
+  @Column({ type: 'enum', enum: OAuthProviderEnum })
+  provider: OAuthProviderEnum;
 
   @Column()
+  @Index(['provider', 'providerUserId'], { unique: true })
   providerUserId: string;
 
   @Column()
@@ -29,6 +32,15 @@ export class OAuthAccount {
 
   @Column()
   refreshToken: string;
+
+  @Column({ nullable: true })
+  tokenType?: string;
+
+  @Column({ nullable: true })
+  scope?: string;
+
+  @Column({ type: 'timestamp', nullable: true })
+  accessTokenExpiresAt?: Date;
 
   @CreateDateColumn()
   createdAt: Date;

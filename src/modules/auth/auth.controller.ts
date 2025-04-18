@@ -31,11 +31,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login with email/username and password' })
   @ApiResponse({ status: 200, description: 'Login successful' })
-  async login(@Body(ValidationPipe) loginDto: LoginDto) {
-    return {
-      login: true,
-    };
-  }
+  async login(@Body(ValidationPipe) loginDto: LoginDto) {}
 
   @Post('refresh-token')
   @HttpCode(HttpStatus.OK)

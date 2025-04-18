@@ -9,7 +9,7 @@ import {
 import { User } from './user.entity';
 
 @Entity()
-export class RefreshToken {
+export class UserRefreshToken {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -18,10 +18,16 @@ export class RefreshToken {
   user: User;
 
   @Column()
-  token: string;
+  hashedToken: string;
 
   @Column('timestamp')
   expirationDate: Date;
+
+  @Column({ nullable: true })
+  ipAddress?: string;
+
+  @Column({ nullable: true })
+  userAgent?: string;
 
   @CreateDateColumn()
   createdAt: Date;

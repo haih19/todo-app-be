@@ -1,5 +1,5 @@
-import { OAuthAccount } from '@/modules/auth/entities/oauth-account.entity';
-import { RefreshToken } from '@/modules/auth/entities/refresh-token.entity';
+import { UserOAuthAccount } from '@/modules/auth/entities/oauth-account.entity';
+import { UserRefreshToken } from '@/modules/auth/entities/refresh-token.entity';
 import { User } from '@/modules/auth/entities/user.entity';
 import { Note } from '@/modules/notes/entities/note.entity';
 import { Permission } from '@/modules/notes/entities/permission.entity';
@@ -16,7 +16,16 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         type: 'postgres',
-        entities: [User, OAuthAccount, RefreshToken, Note, Permission, SharedLink, Role, UserRole],
+        entities: [
+          User,
+          UserOAuthAccount,
+          UserRefreshToken,
+          Note,
+          Permission,
+          SharedLink,
+          Role,
+          UserRole,
+        ],
         ssl: { rejectUnauthorized: false },
         autoLoadEntities: true,
         synchronize: false,
