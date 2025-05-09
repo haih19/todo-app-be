@@ -4,6 +4,8 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
+  ParseIntPipe,
   Post,
   UseGuards,
   ValidationPipe,
@@ -31,7 +33,17 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login with email/username and password' })
   @ApiResponse({ status: 200, description: 'Login successful' })
-  async login(@Body(ValidationPipe) loginDto: LoginDto) {}
+  async login(@Body(ValidationPipe) loginDto: LoginDto) {
+    const { credential, password } = loginDto;
+
+    const user = await this.authService.validateUser(credential, password);
+    const { accessToken } = await this.authService.login(user);
+
+    return {
+      accessToken,
+      user,
+    };
+  }
 
   @Post('refresh-token')
   @HttpCode(HttpStatus.OK)
@@ -47,10 +59,8 @@ export class AuthController {
   @Get('me')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current user profile' })
-  async getProfile() {
-    return {
-      user: 'demo user',
-    };
+  async getProfile(@Param('userId', ParseIntPipe) userId: number) {
+    return await this.authService.getProfile(userId);
   }
 
   @UseGuards(JwtAuthGuard)

@@ -1,4 +1,3 @@
-import { AppLoggerService } from '@/modules/app-logger/app-logger.service';
 import {
   BadGatewayException,
   Injectable,
@@ -6,6 +5,8 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { plainToInstance } from 'class-transformer';
@@ -14,17 +15,19 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { User } from './entities/user.entity';
 import { UserStatusEnum } from './enums/auth.enums';
-import { LoginDto } from './dto/login.dto';
-import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
+  private readonly jwtExpiresIn: string;
+
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    private logger: AppLoggerService,
-    private jwtService: JwtService
-  ) {}
+    private jwtService: JwtService,
+    private configService: ConfigService
+  ) {
+    this.jwtExpiresIn = configService.get<string>('JWT_EXPIRES_IN', '3200s');
+  }
 
   private async generateRandomUsername(): Promise<string> {
     try {
@@ -71,7 +74,7 @@ export class AuthService {
     }
   }
 
-  async validateUser(credential: string, password: string) {
+  async validateUser(credential: string, password: string): Promise<UserResponseDto> {
     try {
       const isEmail = credential.includes('@');
 
@@ -85,7 +88,9 @@ export class AuthService {
 
       if (!isPasswordValid) throw new UnauthorizedException('Invalid password.');
 
-      return filteredUser;
+      return plainToInstance(UserResponseDto, filteredUser, {
+        excludeExtraneousValues: true,
+      });
     } catch (error) {
       throw error;
     }
@@ -98,18 +103,18 @@ export class AuthService {
       const existingUser = await this.userRepository.findOne({
         where: [{ email }, { username }],
       });
+
       if (existingUser) {
         throw new BadGatewayException('Email or Username already in use.');
       }
 
-      const [hashedPassword, generatedUsername] = await Promise.all([
-        bcrypt.hash(password, 10),
-        this.generateRandomUsername(),
-      ]);
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const generateUsername = username ? username : await this.generateRandomUsername();
 
       const newUser = this.userRepository.create({
         email,
-        username: generatedUsername,
+        username: generateUsername,
         password: hashedPassword,
         firstName,
         lastName,
@@ -118,7 +123,9 @@ export class AuthService {
 
       const savedUser = await this.userRepository.save(newUser);
 
-      return plainToInstance(UserResponseDto, savedUser);
+      return plainToInstance(UserResponseDto, savedUser, {
+        excludeExtraneousValues: true,
+      });
     } catch (error) {
       throw error;
     }
@@ -132,8 +139,24 @@ export class AuthService {
       };
 
       return {
-        access_token: this.jwtService.sign(payload),
+        accessToken: this.jwtService.sign(payload, {
+          expiresIn: this.jwtExpiresIn,
+        }),
       };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getProfile(userId: number): Promise<UserResponseDto> {
+    try {
+      const user = this.userRepository.findOne({ where: { id: userId } });
+
+      if (!user) throw new NotFoundException('Not found username or email.');
+
+      return plainToInstance(UserResponseDto, user, {
+        excludeExtraneousValues: true,
+      });
     } catch (error) {
       throw error;
     }
