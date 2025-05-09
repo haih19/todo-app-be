@@ -31,7 +31,17 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login with email/username and password' })
   @ApiResponse({ status: 200, description: 'Login successful' })
-  async login(@Body(ValidationPipe) loginDto: LoginDto) {}
+  async login(@Body(ValidationPipe) loginDto: LoginDto) {
+    const { credential, password } = loginDto;
+
+    const user = await this.authService.validateUser(credential, password);
+    const { accessToken } = await this.authService.login(user);
+
+    return {
+      accessToken,
+      user,
+    };
+  }
 
   @Post('refresh-token')
   @HttpCode(HttpStatus.OK)

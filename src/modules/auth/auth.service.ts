@@ -1,4 +1,3 @@
-import { AppLoggerService } from '@/modules/app-logger/app-logger.service';
 import {
   BadGatewayException,
   Injectable,
@@ -14,17 +13,21 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { User } from './entities/user.entity';
 import { UserStatusEnum } from './enums/auth.enums';
-import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
+  private readonly jwtExpiresIn: string;
+
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    private logger: AppLoggerService,
-    private jwtService: JwtService
-  ) {}
+    private jwtService: JwtService,
+    private configService: ConfigService
+  ) {
+    this.jwtExpiresIn = configService.get<string>('JWT_EXPIRES_IN', '3200s');
+  }
 
   private async generateRandomUsername(): Promise<string> {
     try {
@@ -71,7 +74,7 @@ export class AuthService {
     }
   }
 
-  async validateUser(credential: string, password: string) {
+  async validateUser(credential: string, password: string): Promise<UserResponseDto> {
     try {
       const isEmail = credential.includes('@');
 
@@ -85,7 +88,7 @@ export class AuthService {
 
       if (!isPasswordValid) throw new UnauthorizedException('Invalid password.');
 
-      return filteredUser;
+      return plainToInstance(UserResponseDto, filteredUser);
     } catch (error) {
       throw error;
     }
@@ -132,7 +135,9 @@ export class AuthService {
       };
 
       return {
-        access_token: this.jwtService.sign(payload),
+        accessToken: this.jwtService.sign(payload, {
+          expiresIn: this.jwtExpiresIn,
+        }),
       };
     } catch (error) {
       throw error;
